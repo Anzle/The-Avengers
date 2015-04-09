@@ -62,7 +62,7 @@ main( int argc, char ** argv )
 	char			prompt[] = "Enter a string>>";
 	char			output[512];
 	int			len;
-	int			count;
+	//int			count;
 
 	if ( argc < 2 )
 	{

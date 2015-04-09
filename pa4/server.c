@@ -65,12 +65,12 @@ client_session_thread( void * arg )
 {
 	int			sd;
 	char		request[2048];
-	char		response[2048];
+	//char		response[2048];
 	char		temp;
 	int			i;
 	int			limit, size;
-	float		ignore;
-	long		senderIPaddr;
+	//float		ignore;
+	//long		senderIPaddr;
 
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
