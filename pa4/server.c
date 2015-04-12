@@ -75,8 +75,13 @@ client_session_thread( void * arg )
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
 	pthread_detach( pthread_self() );		// Don't join on this thread
+	
+	//Read input from the client
 	while ( read( sd, request, sizeof(request) ) > 0 )
 	{
+		
+		/*
+		//request is what we got from the client
 		printf( "server receives input:  %s\n", request );
 		size = strlen( request );
 		limit = strlen( request ) / 2;
@@ -86,8 +91,14 @@ client_session_thread( void * arg )
 			request[i] = request[size - i - 1];
 			request[size - i - 1] = temp;
 		}
+		*/
+		
+		
+		//Write back to the client
 		write( sd, request, strlen(request) + 1 );
 	}
+	
+	//End of communications 
 	close( sd );
 	return 0;
 }
