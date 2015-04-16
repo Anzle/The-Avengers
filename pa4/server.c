@@ -8,7 +8,7 @@
 #include	<netdb.h>
 #include	<pthread.h>
 
-// Miniature server to exercise getaddrinfo(2).
+#define PORT_NUM "52966"
 
 int
 claim_port( const char * port )
@@ -65,12 +65,6 @@ client_session_thread( void * arg )
 {
 	int			sd;
 	char		request[2048];
-	//char		response[2048];
-	char		temp;
-	int			i;
-	int			limit, size;
-	//float		ignore;
-	//long		senderIPaddr;
 
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
@@ -125,7 +119,7 @@ main( int argc, char ** argv )
 		printf( "pthread_attr_setscope() failed in file %s line %d\n", __FILE__, __LINE__ );
 		return 0;
 	}
-	else if ( (sd = claim_port( "3000" )) == -1 )
+	else if ( (sd = claim_port( PORT_NUM )) == -1 )
 	{
 		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", "3000", strerror( errno ) ) );
 		return 1;
