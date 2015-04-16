@@ -65,7 +65,7 @@ read_input( void * arg ){
 	
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
-	pthread_detach( pthread_self() );		// Don't join on this thread
+	//pthread_detach( pthread_self() );		// Don't join on this thread
 	
 	while ( write( 1, prompt, sizeof(prompt) ), (len = read( 0, request, sizeof(request) )) > 0 )
 	{
@@ -156,9 +156,14 @@ main( int argc, char ** argv )
 			return 0;
 		}
 		
-		for( ;; ){
-			continue;
-		}
+		pthread_join( rtid, NULL );
+		
+		printf("Session Ended.\n");
+		
+		free( rfdptr );
+		free( pfdptr );
+		pthread_attr_destroy( &reader_attr );
+		pthread_attr_destroy( &printer_attr );
 		
 		close( sd );
 		return 0;
