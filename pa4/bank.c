@@ -5,7 +5,7 @@
 int
 createAccount(Account * deAccount, char * aName){
 	if(!deAccount){
-		printf("%s Invalid Account: %s\n", ACCERR) ;
+		printf("%s Invalid Account: \n", ACCERR) ;
 		return -1 ; // failure
 	}
 	
@@ -15,8 +15,8 @@ createAccount(Account * deAccount, char * aName){
 	}
 	
 	strcpy(deAccount->name, aName) ;
-	currentBalance = 0f ;
-	inSession = FALSE ; 
+	deAccount->currentBalance = 0 ;
+	deAccount->inSession = FALSE ; 
 	
 	return 0 ; // success
 }
@@ -24,7 +24,7 @@ createAccount(Account * deAccount, char * aName){
 int
 queryAccount(Account * deAccount){
 	if(!deAccount){
-		printf("%s Invalid Account: %s\n", ACCERR) ;
+		printf("%s Invalid Account: \n", ACCERR) ;
 		return 0 ; 
 	}
 	
@@ -34,7 +34,7 @@ queryAccount(Account * deAccount){
 int
 depositMoney(Account * deAccount, float amount){
 	if(!deAccount){
-		printf("%s Invalid Account: %s\n", ACCERR) ;
+		printf("%s Invalid Account: \n", ACCERR) ;
 		return 0 ; 
 	} 
 	
@@ -46,7 +46,7 @@ depositMoney(Account * deAccount, float amount){
 int
 withdrawMoney(Account * deAccount, float amount){
 	if(!deAccount){
-		printf("%s Invalid Account: %s\n", ACCERR) ;
+		printf("%s Invalid Account: \n", ACCERR) ;
 		return 0 ; 
 	}	
 	deAccount->currentBalance -= amount ;
@@ -86,7 +86,7 @@ addAccount(Bank * daBank, char * aName){
 		return -2 ; // failure
 	}
 	
-	phread_mutex_lock( & daBank->lock ); // lock so no-one can interfere
+	pthread_mutex_lock( & daBank->lock ); // lock so no-one can interfere
 	
 	if(daBank->activeAccounts >= ACCNUM){
 		printf("%s There are already %d accounts in the bank\n", BNKERR, daBank->activeAccounts) ;
@@ -98,7 +98,7 @@ addAccount(Bank * daBank, char * aName){
 	
 	for(int i=0; i < ACCNUM; i++){
 		if (strcmp(aName, daBank->accounts[i].name) == 0 ){
-			printf("&s There is already an account with the name %s\n", ACCERR, aName) ;
+			printf("%s There is already an account with the name %s\n", ACCERR, aName) ;
 			pthread_mutex_unlock(& daBank->lock) ;
 			return -4 ; // failure
 		}
@@ -127,7 +127,7 @@ findAccount( Bank * daBank, char * aName){
 		return -2 ; // failure
 	}
 	
-	int position = -1 ;
+	int position = -3 ;
 	
 	for(int i=0; i < ACCNUM; i++){
 		if (strcmp(aName, daBank->accounts[i].name) == 0 ){
@@ -153,7 +153,7 @@ removeAccount(Bank * daBank, char * aName){
 		return -2 ; // failure
 	}
 	
-	phread_mutex_lock( & daBank->lock ); // lock so no-one can interfere
+	pthread_mutex_lock( & daBank->lock ); // lock so no-one can interfere
 
 	int position = -1 ;
 
@@ -187,12 +187,11 @@ printAccounts(Bank * daBank){
 	
 	pthread_mutex_lock(& daBank->lock) ; // lock so no-one can interfere
 	
-	int i = 0 ;
-	for(i; i < ACCNUM; i++){
+	for(int i = 0; i < ACCNUM; i++){
 		if(daBank->accounts[i].name[0] == '\0')
 			continue ;
-		printf("%100.s \t %2.2f ", daBank->accounts[i]->name, daBank->accounts[i]->currentBalance) ;
-		if(daBank->accounts[i]->inSession == TRUE)
+		printf("%100.s \t %2.2f ", daBank->accounts[i].name, daBank->accounts[i].currentBalance) ;
+		if(daBank->accounts[i].inSession == TRUE)
 			printf("\t IN SERVICE\n") ;
 		else
 			printf ("\t \n");

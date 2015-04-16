@@ -1,7 +1,13 @@
+#ifndef BANK_H
+#define BANH_H
+
 #include <stdio.h>
 #include <stdlib.h>
-#inlcude <pthread.h>
-#include <string.h>;
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include <pthread.h>
+#include <string.h>
 
 #define ACCERR "Account Error:"
 #define BNKERR "Bank Error:"
@@ -35,7 +41,7 @@ int withdrawMoney(Account * deAccount, float amount);
 
 //Bank
 typedef struct {
-	pthread_mutex_lock lock; //lock for printing/adding/removing(?) accounts
+	pthread_mutex_t lock; //lock for printing/adding/removing(?) accounts
 	Account accounts[ACCNUM]; //Bank Accounts
 	int activeAccounts; //keep the number of active accounts
 } Bank;
@@ -49,7 +55,7 @@ int buildDaBank(Bank * daBank);
 int addAccount(Bank * daBank, char * aName);
 
 /* Search the Bank for an Account by name
-	return the position of the Account on success, -1/-2 on failure */
+	return the position of the Account on success, -1/-2/-3 on failure */
 int findAccount( Bank * daBank, char * aName);
 
 /* Remove an Account from the Bank
@@ -61,4 +67,6 @@ int removeAccount(Bank * daBank, char * aName);
  ** This function will run in its own thread, waiting for a Semaphore
 	to consume before performing the next iteration. Works together with a
 	SIGALARM that sounds every 20 seconds and posts the Semaphore ** */
-int printAccounts(Bank * daBank)
+int printAccounts(Bank * daBank);
+
+#endif

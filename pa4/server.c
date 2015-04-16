@@ -7,8 +7,20 @@
 #include	<sys/socket.h>
 #include	<netdb.h>
 #include	<pthread.h>
+#include	"bank.h"
 
 #define PORT_NUM "52966"
+#define QUERY "query"
+#define END		"end"
+#define QUIT	"quit"
+#define CRET	"create"
+#define SERV	"serve"
+#define DEPO	"deposit"
+#define WIDW	"withdraw"	
+
+
+//A global Bank for all to see
+static Bank		daBank;
 
 int
 claim_port( const char * port )
@@ -65,33 +77,85 @@ client_session_thread( void * arg )
 {
 	int			sd;
 	char		request[2048];
-
+	
+	char		*command;
+	char		*data;
+	
+	int 		loc = -1; 
+	bool		serving = FALSE; //Are we servicing?
+	bool		disconnect = FALSE;
+	Account		*account;
+	float		money = 0;
+				
+	
+	
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
 	pthread_detach( pthread_self() );		// Don't join on this thread
 	
 	//Read input from the client
-	while ( read( sd, request, sizeof(request) ) > 0 )
+	while ( read( sd, request, sizeof(request) ) > 0 && !disconnect)
 	{
 		
-		/*
 		//request is what we got from the client
-		printf( "server receives input:  %s\n", request );
-		size = strlen( request );
-		limit = strlen( request ) / 2;
-		for ( i = 0 ; i < limit ; i++ )
-		{
-			temp = request[i];
-			request[i] = request[size - i - 1];
-			request[size - i - 1] = temp;
+		printf( "server receives input:  %s from SD: %d \n", request, sd );
+		command = strtok(request, " ");
+		data = strtok(NULL, "\0");
+		
+		if(strcmp(command, CRET) && !serving){
+			if(addAccount(&daBank, data) != 0){
+				strcpy(request, "Could not add account to bank\n");
+			}
+			else{
+				strcpy(request, "Account successfully created\n");
+			}
 		}
-		*/
+		else if(strcmp(command, SERV) && !serving){
+			if( (loc = findAccount(&daBank, data)) < 0){
+				strcpy(request, "Could not find account name in the bank\n");
+			}
+			else if(daBank.accounts[loc].inSession){
+				strcpy(request, "This account is currently in session, please try again later\n");
+			}
+			else{
+				account = &daBank.accounts[loc];
+				account->inSession = TRUE;
+				serving = TRUE;
+				
+				strcpy(request, "You are now serving: ");
+				strcat(request, account->name);
+			}
+		}
 		
-		
+		else if(strcmp(command, DEPO) && serving){
+			money = atof(data);
+			loc = depositMoney(account, money);
+			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+		}
+		else if(strcmp(command, WIDW) && serving){
+			money = atof(data);
+			loc = withdrawMoney(account, money);
+			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+		}
+		else if(strcmp(command, QUERY) && serving){
+			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+		}
+		else if(strcmp(command, END) && serving){
+			sprintf(request, "%s no long in service", account->name);
+			serving = FALSE;
+			account = NULL;
+		}
+		else if(strcmp(command, QUIT)){
+			sprintf(request, "Disconnecting from the Bank\n");
+			disconnect = TRUE; //should quit on next iteration
+		}		
+		else{
+			sprintf(request, "You have sent invalid input to the server. Shame on you! Hulk SMASH!\n");
+		}
 		//Write back to the client
 		write( sd, request, strlen(request) + 1 );
 	}
-	
+	printf("Disconnecting from %d", sd);
 	//End of communications 
 	close( sd );
 	return 0;
@@ -108,8 +172,14 @@ main( int argc, char ** argv )
 	int					fd;
 	struct sockaddr_in	senderAddr;
 	int *				fdptr;
+	
+	if( buildDaBank(&daBank) != 0){
+		printf("DESTROYED: The Avengers were unable to save this bank.\n");
+		return 0;
+	}
 
-	if ( pthread_attr_init( &kernel_attr ) != 0 )
+	//This was an if in Russel's code
+	else if ( pthread_attr_init( &kernel_attr ) != 0 )
 	{
 		printf( "pthread_attr_init() failed in file %s line %d\n", __FILE__, __LINE__ );
 		return 0;
