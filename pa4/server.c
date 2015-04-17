@@ -117,12 +117,18 @@ client_session_thread( void * arg )
 				flush(request);
 				strcpy(request, "Could not find account name in the bank\n");
 			}
-			else if(daBank.accounts[loc].inSession){
-				flush(request);
-				strcpy(request, "This account is currently in session, please try again later\n");
-			}
+
 			else{
 				account = &daBank.accounts[loc];
+				
+				//try to access a locked(maybe) mutex
+				while( pthread_mutex_trylock(&account->lock)!= 0 ){
+					flush(request);
+					sprintf(request, "Account Locked. Trying again.\n");
+					write( sd, request, strlen(request) + 1 );
+					sleep(2);
+				}
+								
 				account->inSession = TRUE;
 				serving = TRUE;
 				
@@ -155,12 +161,15 @@ client_session_thread( void * arg )
 			flush(request);
 			sprintf(request, "%s no long in service", account->name);
 			serving = FALSE;
+			account->inSession = FALSE;
+			pthread_mutex_unlock(&account->lock);
 			account = NULL;
 		}
 		
 		else if((strcmp(command, "quit") == 0 )){
 			flush(request);
 			sprintf(request, "Disconnecting from the Bank\n");
+			pthread_mutex_unlock(&account->lock);
 			disconnect = TRUE; //should quit on next iteration
 		}		
 		
@@ -177,6 +186,19 @@ client_session_thread( void * arg )
 	close( sd );
 	return 0;
 }
+
+void * 
+printBank(void *arg ){
+	
+	pthread_detach(pthread_self());
+	
+	while(1){
+		sleep(20);
+		printAccounts(&daBank);	
+	}
+	return 0;
+}
+
 
 int
 main( int argc, char ** argv )
@@ -211,7 +233,7 @@ main( int argc, char ** argv )
 		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", "3000", strerror( errno ) ) );
 		return 1;
 	}
-	else if ( listen( sd, 100 ) == -1 )
+	else if ( listen( sd, 20 ) == -1 ) //lowered this on Russles instruction
 	{
 		printf( "listen() failed in file %s line %d\n", __FILE__, __LINE__ );
 		close( sd );
@@ -219,6 +241,13 @@ main( int argc, char ** argv )
 	}
 	else
 	{
+		//Create print out all accounts thread
+		if ( pthread_create( &tid, &kernel_attr, printBank, NULL ) != 0 )
+			{
+				printf( "pthread_create() failed in file %s line %d\n", __FILE__, __LINE__ );
+				return 0;
+			}
+			
 		ic = sizeof(senderAddr);
 		while ( (fd = accept( sd, (struct sockaddr *)&senderAddr, &ic )) != -1 )
 		{

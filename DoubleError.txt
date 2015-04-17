@@ -1,0 +1,42 @@
+double free error found in client after attempting to quit. 
+
+*** glibc detected *** ./client: double free or corruption (fasttop): 0x0000000000d30010 ***
+======= Backtrace: =========
+/lib64/libc.so.6(+0x75e66)[0x7fafed2a3e66]
+./client[0x4012ff]
+/lib64/libc.so.6(__libc_start_main+0xfd)[0x7fafed24cd5d]
+./client[0x400c59]
+======= Memory map: ========
+00400000-00402000 r-xp 00000000 00:1c 5342753                            /.autofs/ilab/ilab_users/rlw115/The-Avengers/pa4/client
+00601000-00602000 rw-p 00001000 00:1c 5342753                            /.autofs/ilab/ilab_users/rlw115/The-Avengers/pa4/client
+00d30000-00d51000 rw-p 00000000 00:00 0                                  [heap]
+7fafe4000000-7fafe4022000 rw-p 00000000 00:00 0
+7fafe4022000-7fafe8000000 ---p 00000000 00:00 0
+7fafebc16000-7fafebc2c000 r-xp 00000000 08:07 131323                     /lib64/libgcc_s-4.4.7-20120601.so.1
+7fafebc2c000-7fafebe2b000 ---p 00016000 08:07 131323                     /lib64/libgcc_s-4.4.7-20120601.so.1
+7fafebe2b000-7fafebe2c000 rw-p 00015000 08:07 131323                     /lib64/libgcc_s-4.4.7-20120601.so.1
+7fafebe2c000-7fafebe2d000 ---p 00000000 00:00 0
+7fafebe2d000-7fafec82d000 rw-p 00000000 00:00 0
+7fafec82d000-7fafec82e000 ---p 00000000 00:00 0
+7fafec82e000-7fafed22e000 rw-p 00000000 00:00 0
+7fafed22e000-7fafed3b8000 r-xp 00000000 08:07 131273                     /lib64/libc-2.12.so
+7fafed3b8000-7fafed5b8000 ---p 0018a000 08:07 131273                     /lib64/libc-2.12.so
+7fafed5b8000-7fafed5bc000 r--p 0018a000 08:07 131273                     /lib64/libc-2.12.so
+7fafed5bc000-7fafed5bd000 rw-p 0018e000 08:07 131273                     /lib64/libc-2.12.so
+7fafed5bd000-7fafed5c2000 rw-p 00000000 00:00 0
+7fafed5c2000-7fafed5d9000 r-xp 00000000 08:07 131342                     /lib64/libpthread-2.12.so
+7fafed5d9000-7fafed7d9000 ---p 00017000 08:07 131342                     /lib64/libpthread-2.12.so
+7fafed7d9000-7fafed7da000 r--p 00017000 08:07 131342                     /lib64/libpthread-2.12.so
+7fafed7da000-7fafed7db000 rw-p 00018000 08:07 131342                     /lib64/libpthread-2.12.so
+7fafed7db000-7fafed7df000 rw-p 00000000 00:00 0
+7fafed7df000-7fafed7ff000 r-xp 00000000 08:07 131206                     /lib64/ld-2.12.so
+7fafed9bf000-7fafed9c2000 rw-p 00000000 00:00 0
+7fafed9c7000-7fafed9c9000 rw-p 00000000 00:00 0
+7fafed9c9000-7fafed9fe000 r--s 00000000 08:06 132231                     /var/db/nscd/hosts
+7fafed9fe000-7fafed9ff000 r--p 0001f000 08:07 131206                     /lib64/ld-2.12.so
+7fafed9ff000-7fafeda00000 rw-p 00020000 08:07 131206                     /lib64/ld-2.12.so
+7fafeda00000-7fafeda02000 rw-p 00000000 00:00 0
+7fffa7df5000-7fffa7e0a000 rw-p 00000000 00:00 0                          [stack]
+7fffa7e3e000-7fffa7e3f000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+Aborted

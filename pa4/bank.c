@@ -8,7 +8,7 @@ createAccount(Account * deAccount, char * aName){
 		printf("%s Invalid Account: \n", ACCERR) ;
 		return -1 ; // failure
 	}
-	
+
 	if(!aName || strlen(aName) > NAMLEN){
 		printf("%s Invalid Name: %s\n", ACCERR, aName) ;
 		return -2 ; // failure
@@ -68,9 +68,13 @@ buildDaBank(Bank * daBank){
 		return -2 ; //failure
 	}
 	
-	for(int i=0 ; i < ACCNUM ; i++)
+	for(int i=0 ; i < ACCNUM ; i++){
 		daBank->accounts[i].name[0] = '\0' ;
-	
+		if(pthread_mutex_init(&daBank->accounts[i].lock, 0 ) > 0 ) //initialize the mutex
+		{	printf("%s Couldn't initialize the Account MUTEX\n", ACCERR) ;
+			return -3 ; //failure
+		}
+	}
 	daBank->activeAccounts = 0 ;
 	return 0 ; // success
 }
@@ -190,7 +194,7 @@ printAccounts(Bank * daBank){
 	for(int i = 0; i < ACCNUM; i++){
 		if(daBank->accounts[i].name[0] == '\0')
 			continue ;
-		printf("%100.s \t %2.2f ", daBank->accounts[i].name, daBank->accounts[i].currentBalance) ;
+		printf("%s \t %2.2f ", daBank->accounts[i].name, daBank->accounts[i].currentBalance) ;
 		if(daBank->accounts[i].inSession == TRUE)
 			printf("\t IN SERVICE\n") ;
 		else

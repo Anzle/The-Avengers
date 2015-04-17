@@ -21,6 +21,7 @@ typedef enum {FALSE, TRUE} bool;
 typedef struct{
 	char name[NAMLEN + 1]; //max length 100 + '\0'
 	float currentBalance; //String formatter: %2.2f 
+	pthread_mutex_t lock; //to lock accounts
 	bool inSession;
 } Account;
 
