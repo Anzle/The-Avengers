@@ -38,6 +38,9 @@ depositMoney(Account * deAccount, float amount){
 		return 0 ; 
 	} 
 	
+	if(amount < 0)
+		return deAccount->currentBalance ;
+	
 	deAccount->currentBalance += amount ;
 	
 	return deAccount->currentBalance ;
@@ -48,7 +51,10 @@ withdrawMoney(Account * deAccount, float amount){
 	if(!deAccount){
 		printf("%s Invalid Account: \n", ACCERR) ;
 		return 0 ; 
-	}	
+	}
+	if(amount < 0)
+		return deAccount->currentBalance ;
+	
 	deAccount->currentBalance -= amount ;
 	
 	return deAccount->currentBalance ;
