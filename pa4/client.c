@@ -71,6 +71,7 @@ read_input( void * arg ){
 	{
 		request[len-1]= '\0';
 		if(strcmp(request, "quit") == 0){
+			write(sd, "end", 4);
 			break;
 		}
 		write( sd, request, strlen( request ) + 1 );
