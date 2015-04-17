@@ -86,7 +86,7 @@ void *
 print_output( void * arg ) {
 	
 	int 	sd;
-	char	response[2048];
+	char	response[2048] = { 0 };
 	
 	sd = *(int *) arg;
 	free( arg );
@@ -95,11 +95,13 @@ print_output( void * arg ) {
 	while ( read( sd, response, sizeof(response) ) > 0 )
 	{
 		char *out = (char *)malloc(sizeof(response) + 3);
+		memset(out, 0, sizeof(response) +3);
 		strcat( out, response );
 		strcat( out, "\n");
 		strcat( out, "\0");
 		write( 0, out, strlen(out) + 1 ) ;
 		free(out);
+		memset(response, 0, 2048);
 	}
 	
 	close(sd);

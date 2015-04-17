@@ -55,6 +55,11 @@ withdrawMoney(Account * deAccount, float amount){
 	if(amount < 0)
 		return deAccount->currentBalance ;
 	
+	if(deAccount->currentBalance - amount < 0){
+		printf("Not enough money in account to withdraw. Current balance: $%4.2f\n", deAccount->currentBalance);
+		return deAccount->currentBalance ;
+	}
+	
 	deAccount->currentBalance -= amount ;
 	
 	return deAccount->currentBalance ;

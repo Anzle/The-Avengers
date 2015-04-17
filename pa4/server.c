@@ -98,84 +98,90 @@ client_session_thread( void * arg )
 		
 		//request is what we got from the client
 		printf( "server receives input:  %s from SD: %d \n", request, sd );
-		command = strtok(request, " ");
-		data = strtok(NULL, "\0");
-		if((strcmp(command, create) == 0) && !serving){
-			printf("Create\n");
-			if(addAccount(&daBank, data) != 0){
-				flush(request);
-				strcpy(request, "Could not add account to bank\n");
-			}
-			else{
-				flush(request);
-				strcpy(request, "Account successfully created\n");
-			}
-		}
-		else if((strcmp(command, "serve") == 0) && !serving){
-			printf("Serve\n");
-			if( (loc = findAccount(&daBank, data)) < 0){
-				flush(request);
-				strcpy(request, "Could not find account name in the bank\n");
-			}
-
-			else{
-				account = &daBank.accounts[loc];
-				
-				//try to access a locked(maybe) mutex
-				while( pthread_mutex_trylock(&account->lock)!= 0 ){
+		if(strcmp(request, "\0") == 0) {
+			flush(request);
+			strcpy(request, "No command provided.");
+		} else {		
+			command = strtok(request, " ");
+			data = strtok(NULL, "\0");
+			if((strcmp(command, create) == 0) && !serving){
+				printf("Create\n");
+				if(addAccount(&daBank, data) != 0){
 					flush(request);
-					sprintf(request, "Account Locked. Trying again.\n");
-					write( sd, request, strlen(request) + 1 );
-					sleep(2);
+					strcpy(request, "Could not add account to bank\n");
 				}
-								
-				account->inSession = TRUE;
-				serving = TRUE;
-				
-				flush(request);
-				strcpy(request, "You are now serving: ");
-				strcat(request, account->name);
+				else{
+					flush(request);
+					strcpy(request, "Account successfully created\n");
+				}
 			}
-		}
-		
-		else if((strcmp(command, "deposit") == 0) && serving){
-			money = atof(data);
-			loc = depositMoney(account, money);
-			flush(request);
-			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
-		}
-		
-		else if((strcmp(command, "withdraw") == 0) && serving){
-			money = atof(data);
-			loc = withdrawMoney(account, money);
-			flush(request);
-			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
-		}
-		
-		else if((strcmp(command, "query") == 0) && serving){
-			flush(request);
-			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
-		}
-		
-		else if((strcmp(command, "end") == 0 )&& serving){
-			flush(request);
-			sprintf(request, "%s no long in service", account->name);
-			serving = FALSE;
-			account->inSession = FALSE;
-			pthread_mutex_unlock(&account->lock);
-			account = NULL;
-		}
-		
-		else if((strcmp(command, "quit") == 0 )){
-			flush(request);
-			sprintf(request, "Disconnecting from the Bank\n");
-			pthread_mutex_unlock(&account->lock);
-			disconnect = TRUE; //should quit on next iteration
-		}		
-		
-		else{
-			flush(request);
-			sprintf(request, "You have sent invalid input to the server. Shame on you! Hulk SMASH!\n");
+			else if((strcmp(command, "serve") == 0) && !serving){
+				printf("Serve\n");
+				if( (loc = findAccount(&daBank, data)) < 0){
+					flush(request);
+					strcpy(request, "Could not find account name in the bank\n");
+				}
+
+				else{
+					account = &daBank.accounts[loc];
+					
+					//try to access a locked(maybe) mutex
+					while( pthread_mutex_trylock(&account->lock)!= 0 ){
+						flush(request);
+						sprintf(request, "Account Locked. Trying again.\n");
+						write( sd, request, strlen(request) + 1 );
+						sleep(2);
+					}
+									
+					account->inSession = TRUE;
+					serving = TRUE;
+					
+					flush(request);
+					strcpy(request, "You are now serving: ");
+					strcat(request, account->name);
+					strcat(request, "\n");
+				}
+			}
+			
+			else if((strcmp(command, "deposit") == 0) && serving){
+				money = atof(data);
+				loc = depositMoney(account, money);
+				flush(request);
+				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+			}
+			
+			else if((strcmp(command, "withdraw") == 0) && serving){
+				money = atof(data);
+				loc = withdrawMoney(account, money);
+				flush(request);
+				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+			}
+			
+			else if((strcmp(command, "query") == 0) && serving){
+				flush(request);
+				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+			}
+			
+			else if((strcmp(command, "end") == 0 )&& serving){
+				flush(request);
+				sprintf(request, "%s is no longer in service", account->name);
+				serving = FALSE;
+				account->inSession = FALSE;
+				pthread_mutex_unlock(&account->lock);
+				account = NULL;
+			}
+			
+			else if((strcmp(command, "quit") == 0 )){
+				flush(request);
+				sprintf(request, "Disconnecting from the Bank\n");
+				pthread_mutex_unlock(&account->lock);
+				disconnect = TRUE; //should quit on next iteration
+			}		
+			
+			else{
+				flush(request);
+				sprintf(request, "You have sent invalid input to the server. Shame on you! Hulk SMASH!\n");
+			}
 		}
 		//Write back to the client
 		printf("%s\n", request);
@@ -194,7 +200,9 @@ printBank(void *arg ){
 	
 	while(1){
 		sleep(20);
-		printAccounts(&daBank);	
+		printf("Bank Status:\n");
+		printAccounts(&daBank);
+		printf("\n");
 	}
 	return 0;
 }
