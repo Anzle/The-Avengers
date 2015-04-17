@@ -10,17 +10,16 @@
 #include	"bank.h"
 
 #define PORT_NUM "52966"
-#define QUERY "query"
-#define END		"end"
-#define QUIT	"quit"
-#define CRET	"create"
-#define SERV	"serve"
-#define DEPO	"deposit"
-#define WIDW	"withdraw"	
+	
 
 
 //A global Bank for all to see
 static Bank		daBank;
+
+void flush(char* str){
+	for(int i = 0; i< strlen(str)+1; i++)
+		str[i] = '\0';
+}
 
 int
 claim_port( const char * port )
@@ -77,7 +76,7 @@ client_session_thread( void * arg )
 {
 	int			sd;
 	char		request[2048];
-	
+	char		create[] = "create";
 	char		*command;
 	char		*data;
 	
@@ -101,20 +100,25 @@ client_session_thread( void * arg )
 		printf( "server receives input:  %s from SD: %d \n", request, sd );
 		command = strtok(request, " ");
 		data = strtok(NULL, "\0");
-		
-		if(strcmp(command, CRET) && !serving){
+		if((strcmp(command, create) == 0) && !serving){
+			printf("Create\n");
 			if(addAccount(&daBank, data) != 0){
+				flush(request);
 				strcpy(request, "Could not add account to bank\n");
 			}
 			else{
+				flush(request);
 				strcpy(request, "Account successfully created\n");
 			}
 		}
-		else if(strcmp(command, SERV) && !serving){
+		else if((strcmp(command, "serve") == 0) && !serving){
+			printf("Serve\n");
 			if( (loc = findAccount(&daBank, data)) < 0){
+				flush(request);
 				strcpy(request, "Could not find account name in the bank\n");
 			}
 			else if(daBank.accounts[loc].inSession){
+				flush(request);
 				strcpy(request, "This account is currently in session, please try again later\n");
 			}
 			else{
@@ -122,37 +126,50 @@ client_session_thread( void * arg )
 				account->inSession = TRUE;
 				serving = TRUE;
 				
+				flush(request);
 				strcpy(request, "You are now serving: ");
 				strcat(request, account->name);
 			}
 		}
 		
-		else if(strcmp(command, DEPO) && serving){
+		else if((strcmp(command, "deposit") == 0) && serving){
 			money = atof(data);
 			loc = depositMoney(account, money);
+			flush(request);
 			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
 		}
-		else if(strcmp(command, WIDW) && serving){
+		
+		else if((strcmp(command, "withdraw") == 0) && serving){
 			money = atof(data);
 			loc = withdrawMoney(account, money);
+			flush(request);
 			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
 		}
-		else if(strcmp(command, QUERY) && serving){
+		
+		else if((strcmp(command, "query") == 0) && serving){
+			flush(request);
 			sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
 		}
-		else if(strcmp(command, END) && serving){
+		
+		else if((strcmp(command, "end") == 0 )&& serving){
+			flush(request);
 			sprintf(request, "%s no long in service", account->name);
 			serving = FALSE;
 			account = NULL;
 		}
-		else if(strcmp(command, QUIT)){
+		
+		else if((strcmp(command, "quit") == 0 )){
+			flush(request);
 			sprintf(request, "Disconnecting from the Bank\n");
 			disconnect = TRUE; //should quit on next iteration
 		}		
+		
 		else{
+			flush(request);
 			sprintf(request, "You have sent invalid input to the server. Shame on you! Hulk SMASH!\n");
 		}
 		//Write back to the client
+		printf("%s\n", request);
 		write( sd, request, strlen(request) + 1 );
 	}
 	printf("Disconnecting from %d", sd);
