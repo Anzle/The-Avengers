@@ -41,7 +41,7 @@ connect_to_server( const char * server, const char * port )
 		do {
 			if ( errno = 0, connect( sd, result->ai_addr, result->ai_addrlen ) == -1 )
 			{
-				sleep( 1 );
+				sleep( 3 );
 				write( 1, message, sprintf( message, "\x1b[2;33mConnecting to server %s ...\x1b[0m\n", server ) );
 			}
 			else

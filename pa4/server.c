@@ -92,12 +92,14 @@ client_session_thread( void * arg )
 	free( arg );					// keeping to memory management covenant
 	pthread_detach( pthread_self() );		// Don't join on this thread
 	
+	printf("Connection Accepted from SD: %d\n", sd);
+	
 	//Read input from the client
 	while ( read( sd, request, sizeof(request) ) > 0 && !disconnect)
 	{
 		
 		//request is what we got from the client
-		printf( "server receives input:  %s from SD: %d \n", request, sd );
+		//printf( "server receives input:  %s from SD: %d \n", request, sd );
 		if(strcmp(request, "\0") == 0) {
 			flush(request);
 			strcpy(request, "No command provided.");
@@ -162,13 +164,18 @@ client_session_thread( void * arg )
 				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
 			}
 			
-			else if((strcmp(command, "end") == 0 )&& serving){
-				flush(request);
-				sprintf(request, "%s is no longer in service", account->name);
-				serving = FALSE;
-				account->inSession = FALSE;
-				pthread_mutex_unlock(&account->lock);
-				account = NULL;
+			else if((strcmp(command, "end") == 0 )){
+				if(serving){
+					flush(request);
+					sprintf(request, "%s is no longer in service\n", account->name);
+					serving = FALSE;
+					account->inSession = FALSE;
+					pthread_mutex_unlock(&account->lock);
+					account = NULL;
+				} else {
+					flush(request);
+					sprintf(request, "\n");
+				}
 			}
 			
 			else if((strcmp(command, "quit") == 0 )){
@@ -187,7 +194,7 @@ client_session_thread( void * arg )
 		printf("%s\n", request);
 		write( sd, request, strlen(request) + 1 );
 	}
-	printf("Disconnecting from %d", sd);
+	printf("Disconnecting from %d\n", sd);
 	//End of communications 
 	close( sd );
 	return 0;
