@@ -205,7 +205,7 @@ printAccounts(Bank * daBank){
 	for(int i = 0; i < ACCNUM; i++){
 		if(daBank->accounts[i].name[0] == '\0')
 			continue ;
-		printf("%s \t %2.2f ", daBank->accounts[i].name, daBank->accounts[i].currentBalance) ;
+		printf("%10s \t \x1b[2;33m%2.2f\x1b[0m ", daBank->accounts[i].name, daBank->accounts[i].currentBalance) ;
 		if(daBank->accounts[i].inSession == TRUE)
 			printf("\t IN SERVICE\n") ;
 		else
