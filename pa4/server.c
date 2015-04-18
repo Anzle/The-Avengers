@@ -38,7 +38,7 @@ claim_port( const char * port )
 	addrinfo.ai_addr = NULL;
 	addrinfo.ai_canonname = NULL;
 	addrinfo.ai_next = NULL;
-	if ( getaddrinfo( 0, port, &addrinfo, &result ) != 0 )		// want port
+	if ( getaddrinfo( 0, port, &addrinfo, &result ) != 0 )		// want port 3000
 	{
 		fprintf( stderr, "\x1b[1;31mgetaddrinfo( %s ) failed errno is %s.  File %s line %d.\x1b[0m\n", port, strerror( errno ), __FILE__, __LINE__ );
 		return -1;
@@ -92,8 +92,6 @@ client_session_thread( void * arg )
 	free( arg );					// keeping to memory management covenant
 	pthread_detach( pthread_self() );		// Don't join on this thread
 	
-	printf("Connection Accepted from SD: %d\n", sd);
-	
 	//Read input from the client
 	while ( read( sd, request, sizeof(request) ) > 0 && !disconnect)
 	{
@@ -102,26 +100,26 @@ client_session_thread( void * arg )
 		//printf( "server receives input:  %s from SD: %d \n", request, sd );
 		if(strcmp(request, "\0") == 0) {
 			flush(request);
-			strcpy(request, "No command provided.");
+			strcpy(request, "\x1b[2,31m;No command provided.\x1b[0m\n");
 		} else {		
 			command = strtok(request, " ");
 			data = strtok(NULL, "\0");
 			if((strcmp(command, create) == 0) && !serving){
-				printf("Create\n");
+				//printf("Create\n");
 				if(addAccount(&daBank, data) != 0){
 					flush(request);
-					strcpy(request, "Could not add account to bank\n");
+					strcpy(request, "\x1b[2;31mCould not add account to bank\x1b[0m\n");
 				}
 				else{
 					flush(request);
-					strcpy(request, "Account successfully created\n");
+					strcpy(request, "\x1b[2;32mAccount successfully created\x1b[0m\n");
 				}
 			}
 			else if((strcmp(command, "serve") == 0) && !serving){
-				printf("Serve\n");
+				//printf("Serve\n");
 				if( (loc = findAccount(&daBank, data)) < 0){
 					flush(request);
-					strcpy(request, "Could not find account name in the bank\n");
+					strcpy(request, "\x1b[2;31mCould not find account name in the bank\x1b[0m\n");
 				}
 
 				else{
@@ -130,7 +128,7 @@ client_session_thread( void * arg )
 					//try to access a locked(maybe) mutex
 					while( pthread_mutex_trylock(&account->lock)!= 0 ){
 						flush(request);
-						sprintf(request, "Account Locked. Trying again.\n");
+						sprintf(request, "\x1b[2;33mAccount Locked.\x1b[0m Trying again.\n");
 						write( sd, request, strlen(request) + 1 );
 						sleep(2);
 					}
@@ -139,7 +137,7 @@ client_session_thread( void * arg )
 					serving = TRUE;
 					
 					flush(request);
-					strcpy(request, "You are now serving: ");
+					strcpy(request, "\x1b[2;32mYou are now serving: \x1b[0m");
 					strcat(request, account->name);
 					strcat(request, "\n");
 				}
@@ -149,24 +147,24 @@ client_session_thread( void * arg )
 				money = atof(data);
 				loc = depositMoney(account, money);
 				flush(request);
-				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+				sprintf(request, "%s has \x1b[2;33m$%4.2f \x1b[0m in the bank\n", account->name, account->currentBalance);
 			}
 			
 			else if((strcmp(command, "withdraw") == 0) && serving){
 				money = atof(data);
 				loc = withdrawMoney(account, money);
 				flush(request);
-				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+				sprintf(request, "%s has \x1b[2;33m$%4.2f \x1b[0m in the bank\n", account->name, account->currentBalance);
 			}
 			
 			else if((strcmp(command, "query") == 0) && serving){
 				flush(request);
-				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
+				sprintf(request, "%s has \x1b[2;33m$%4.2f \x1b[0m in the bank\n", account->name, account->currentBalance);
 			}
 			
-			else if((strcmp(command, "end") == 0) && serving){
+			else if((strcmp(command, "end") == 0 )&& serving){
 				flush(request);
-				sprintf(request, "%s is no longer in service\n", account->name);
+				sprintf(request, "%s is no longer in service", account->name);
 				serving = FALSE;
 				account->inSession = FALSE;
 				pthread_mutex_unlock(&account->lock);
@@ -175,7 +173,7 @@ client_session_thread( void * arg )
 			
 			else if((strcmp(command, "quit") == 0 )){
 				flush(request);
-				sprintf(request, "Disconnecting from the Bank\n");
+				sprintf(request, "\x1b[2;34mDisconnecting from the Bank\x1b[0m\n");
 				if(account && account->inSession){
 					account->inSession = FALSE;
 					serving = FALSE;
@@ -187,14 +185,14 @@ client_session_thread( void * arg )
 			
 			else{
 				flush(request);
-				sprintf(request, "You have sent invalid input to the server. Shame on you! Hulk SMASH!\n");
+				sprintf(request, "\x1b[2;31mYou have sent invalid input to the server. Shame on you! Hulk SMASH!\x1b[0m\n");
 			}
 		}
 		//Write back to the client
-		printf("%s\n", request);
+		//printf("%s\n", request);
 		write( sd, request, strlen(request) + 1 );
 	}
-	printf("Disconnecting from %d\n", sd);
+	printf("Disconnecting from %d", sd);
 	//End of communications 
 	close( sd );
 	return 0;
@@ -207,7 +205,7 @@ printBank(void *arg ){
 	
 	while(1){
 		sleep(20);
-		printf("Bank Status:\n");
+		printf("\x1b[2;36mBank Status:\x1b[0m\n");
 		printAccounts(&daBank);
 		printf("\n");
 	}
@@ -245,7 +243,7 @@ main( int argc, char ** argv )
 	}
 	else if ( (sd = claim_port( PORT_NUM )) == -1 )
 	{
-		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", PORT_NUM , strerror( errno ) ) );
+		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", PORT_NUM, strerror( errno ) ) );
 		return 1;
 	}
 	else if ( listen( sd, 20 ) == -1 ) //lowered this on Russell's instruction
