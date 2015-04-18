@@ -10,6 +10,14 @@
 
 #define PORT_NUM "52966"
 
+//read input thread vars
+pthread_t			rtid;
+pthread_attr_t		reader_attr;
+
+//print output thread vars
+pthread_t			ptid;
+pthread_attr_t		printer_attr;
+
 int
 connect_to_server( const char * server, const char * port )
 {
@@ -41,7 +49,7 @@ connect_to_server( const char * server, const char * port )
 		do {
 			if ( errno = 0, connect( sd, result->ai_addr, result->ai_addrlen ) == -1 )
 			{
-				sleep( 1 );
+				sleep( 3 );
 				write( 1, message, sprintf( message, "\x1b[2;33mConnecting to server %s ...\x1b[0m\n", server ) );
 			}
 			else
@@ -105,6 +113,7 @@ print_output( void * arg ) {
 		memset(response, 0, 2048);
 	}
 	
+	pthread_cancel(rtid);
 	close(sd);
 	return 0;
 	
@@ -116,14 +125,6 @@ main( int argc, char ** argv )
 	int					sd;
 	char				message[256];
 	int 				*rfdptr, *pfdptr;
-	
-	//read input thread vars
-	pthread_t			rtid;
-	pthread_attr_t		reader_attr;
-	
-	//print output thread vars
-	pthread_t			ptid;
-	pthread_attr_t		printer_attr;
 
 	if ( argc < 2 )
 	{
