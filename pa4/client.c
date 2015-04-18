@@ -78,10 +78,6 @@ read_input( void * arg ){
 	while ( write( 1, prompt, sizeof(prompt) ), (len = read( 0, request, sizeof(request) )) > 0 )
 	{
 		request[len-1]= '\0';
-		/*if(strcmp(request, "quit") == 0){
-			write(sd, "end", 4);
-			break;
-		}*/
 		write( sd, request, strlen( request ) + 1 );
 		sleep(2);
 	}
@@ -103,7 +99,7 @@ print_output( void * arg ) {
 	
 	while ( read( sd, response, sizeof(response) ) > 0 )
 	{
-		if(strcmp(response, "Disconnecting from the Bank\n") == 0){
+		if(strcmp(response, "\x1b[2;34mDisconnecting from the Bank\x1b[0m\n") == 0){
 			break;
 		}
 		char *out = (char *)malloc(sizeof(response) + 3);

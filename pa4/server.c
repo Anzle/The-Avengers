@@ -92,6 +92,8 @@ client_session_thread( void * arg )
 	free( arg );					// keeping to memory management covenant
 	pthread_detach( pthread_self() );		// Don't join on this thread
 	
+	printf("Connection Accepted from SD: %d\n", sd);
+	
 	//Read input from the client
 	while ( read( sd, request, sizeof(request) ) > 0 && !disconnect)
 	{
@@ -192,7 +194,7 @@ client_session_thread( void * arg )
 		//printf("%s\n", request);
 		write( sd, request, strlen(request) + 1 );
 	}
-	printf("Disconnecting from %d", sd);
+	printf("Disconnecting from %d\n", sd);
 	//End of communications 
 	close( sd );
 	return 0;
