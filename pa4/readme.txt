@@ -24,10 +24,10 @@ To implement the bank, two structs were used:
 										accounts in the bank are traversed and their name, balance, and servicing status are printed. No lock is required to 
 										be placed on the account since data is only being read from the account and not changed. On completion of print, the 
 										bank's mutex is unlocked.
-			2)adding account (addAccount)- the bank is mutex is locked so no other accounts can be added or the bank cannot be printed while adding an account. 
+			2)adding account (addAccount)- the bank's mutex is locked so no other accounts can be added or the bank cannot be printed while adding an account. 
 										   The bank is then checked to make sure that the given account name is not present in the bank already. If not, the 
 										   account is added to the bank and then the bank's mutex is unlocked. 
-		A removeAccount fuction was implemented for the sake of testing and debugging, however this fuctionality is not provided by the server.
+		A removeAccount function was implemented for the sake of testing and debugging, however this functionality is not provided by the server.
 	
 
 **Client**	
@@ -50,7 +50,9 @@ The server uses the banking system implemented in bank.h and bank.c. It contains
 	1)printBank thread: prints the bank every 20 seconds, using sleep(20) to wait on the print
 	2)client_session_thread: reads the requests sent by the client and performs the corresponding bank actions.
 							 Responses on success/failure are then returned to the client and also printed on the server side.
-							 A new client_session_thread is spawned each time a new client connects to the server. 
+							 A new client_session_thread is spawned each time a new client connects to the server.
+							 When a client attempts to serve an account, if the account is already in service, the thread
+							will sleep and check every few seconds in an attempt to service the account.
 Upon execution, a bank object is created and maintained throughout the duration of the server. 
 
 ***The server has also implemented the repeated 2second attempt at accessing an account if it is currently in use.In order to implement
