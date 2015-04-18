@@ -38,7 +38,7 @@ claim_port( const char * port )
 	addrinfo.ai_addr = NULL;
 	addrinfo.ai_canonname = NULL;
 	addrinfo.ai_next = NULL;
-	if ( getaddrinfo( 0, port, &addrinfo, &result ) != 0 )		// want port 3000
+	if ( getaddrinfo( 0, port, &addrinfo, &result ) != 0 )		// want port
 	{
 		fprintf( stderr, "\x1b[1;31mgetaddrinfo( %s ) failed errno is %s.  File %s line %d.\x1b[0m\n", port, strerror( errno ), __FILE__, __LINE__ );
 		return -1;
@@ -245,7 +245,7 @@ main( int argc, char ** argv )
 	}
 	else if ( (sd = claim_port( PORT_NUM )) == -1 )
 	{
-		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", "3000", strerror( errno ) ) );
+		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", PORT_NUM , strerror( errno ) ) );
 		return 1;
 	}
 	else if ( listen( sd, 20 ) == -1 ) //lowered this on Russles instruction
