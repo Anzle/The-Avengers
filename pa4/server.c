@@ -164,24 +164,24 @@ client_session_thread( void * arg )
 				sprintf(request, "%s has $%4.2f in the bank\n", account->name, account->currentBalance);
 			}
 			
-			else if((strcmp(command, "end") == 0 )){
-				if(serving){
-					flush(request);
-					sprintf(request, "%s is no longer in service\n", account->name);
-					serving = FALSE;
-					account->inSession = FALSE;
-					pthread_mutex_unlock(&account->lock);
-					account = NULL;
-				} else {
-					flush(request);
-					sprintf(request, "\n");
-				}
+			else if((strcmp(command, "end") == 0) && serving){
+				flush(request);
+				sprintf(request, "%s is no longer in service\n", account->name);
+				serving = FALSE;
+				account->inSession = FALSE;
+				pthread_mutex_unlock(&account->lock);
+				account = NULL;
 			}
 			
 			else if((strcmp(command, "quit") == 0 )){
 				flush(request);
 				sprintf(request, "Disconnecting from the Bank\n");
-				pthread_mutex_unlock(&account->lock);
+				if(account && account->inSession){
+					account->inSession = FALSE;
+					serving = FALSE;
+					pthread_mutex_unlock(&account->lock);
+					account = NULL;
+				}
 				disconnect = TRUE; //should quit on next iteration
 			}		
 			
@@ -248,7 +248,7 @@ main( int argc, char ** argv )
 		write( 1, message, sprintf( message,  "\x1b[1;31mCould not bind to port %s errno %s\x1b[0m\n", PORT_NUM , strerror( errno ) ) );
 		return 1;
 	}
-	else if ( listen( sd, 20 ) == -1 ) //lowered this on Russles instruction
+	else if ( listen( sd, 20 ) == -1 ) //lowered this on Russell's instruction
 	{
 		printf( "listen() failed in file %s line %d\n", __FILE__, __LINE__ );
 		close( sd );

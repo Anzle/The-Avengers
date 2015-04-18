@@ -73,15 +73,15 @@ read_input( void * arg ){
 	
 	sd = *(int *)arg;
 	free( arg );					// keeping to memory management covenant
-	//pthread_detach( pthread_self() );		// Don't join on this thread
+	pthread_detach( pthread_self() );		// Don't join on this thread
 	
 	while ( write( 1, prompt, sizeof(prompt) ), (len = read( 0, request, sizeof(request) )) > 0 )
 	{
 		request[len-1]= '\0';
-		if(strcmp(request, "quit") == 0){
+		/*if(strcmp(request, "quit") == 0){
 			write(sd, "end", 4);
 			break;
-		}
+		}*/
 		write( sd, request, strlen( request ) + 1 );
 		sleep(2);
 	}
@@ -99,10 +99,13 @@ print_output( void * arg ) {
 	
 	sd = *(int *) arg;
 	free( arg );
-	pthread_detach( pthread_self() );
+	//pthread_detach( pthread_self() );
 	
 	while ( read( sd, response, sizeof(response) ) > 0 )
 	{
+		if(strcmp(response, "Disconnecting from the Bank\n") == 0){
+			break;
+		}
 		char *out = (char *)malloc(sizeof(response) + 3);
 		memset(out, 0, sizeof(response) +3);
 		strcat( out, response );
@@ -160,7 +163,7 @@ main( int argc, char ** argv )
 			return 0;
 		}
 		
-		pthread_join( rtid, NULL );
+		pthread_join( ptid, NULL );
 		
 		printf("Session Ended.\n");
 		
